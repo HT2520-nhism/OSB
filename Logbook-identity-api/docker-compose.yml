@@ -1,0 +1,45 @@
+services:
+  logbook-identity-api:
+    build: .
+    container_name: logbook-identity-api
+    ports:
+      - "3041:3041"
+    env_file:
+      - .env
+    environment:
+      PORT: 3041
+
+      POSTGRES_HOST: logbook-identity-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DBNAME: logbook-identity-api
+      POSTGRES_USERNAME: logbook-identity
+      POSTGRES_PASSWORD: logbook-identity
+
+      # Use Docker service name — localhost inside container cannot reach gateway-api
+      NOTIFICATION_API_URL: http://gateway-api:3030/api/email
+
+    depends_on:
+      - logbook-identity-db
+
+    networks:
+      - app-network
+
+  logbook-identity-db:
+    image: postgres:16
+    container_name: logbook-identity-db
+    restart: always
+    environment:
+      POSTGRES_DB: logbook-identity-api
+      POSTGRES_USER: logbook-identity
+      POSTGRES_PASSWORD: logbook-identity
+    ports:
+      - "5441:5432"
+    networks:
+      - app-network
+
+volumes:
+  logbook-identity-data:
+
+networks:
+  app-network:
+    external: true

@@ -1,0 +1,35 @@
+services:
+
+  electronic-logbook-api:
+    build: .
+    container_name: electronic-logbook-api
+    ports:
+      - "3043:3043"
+    env_file:
+      - .env
+    depends_on:
+      - electronic-logbook-db
+    networks:
+      - app-network
+
+  electronic-logbook-db:
+    image: postgres:16
+    container_name: electronic-logbook-db
+    restart: always
+    environment:
+      POSTGRES_DB: electronic-logbook-api
+      POSTGRES_USER: electronic
+      POSTGRES_PASSWORD: electronic
+    ports:
+      - "5443:5432"
+    volumes:
+      - electronic-logbook-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  electronic-logbook-data:
+
+networks:
+  app-network:
+    name: app-network

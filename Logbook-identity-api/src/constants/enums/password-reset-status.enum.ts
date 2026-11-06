@@ -1,0 +1,7 @@
+export enum PasswordResetStatus {
+  REQUESTED = 'REQUESTED',
+  VERIFIED = 'VERIFIED',
+  COMPLETED = 'COMPLETED',
+  EXPIRED = 'EXPIRED',
+  REVOKED = 'REVOKED',
+}
