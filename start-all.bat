@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 title Electronic Logbook Launcher
 
 echo ========================================================
@@ -6,10 +7,16 @@ echo   KHOI DONG HE THONG ELECTRONIC LOGBOOK
 echo ========================================================
 echo.
 
-echo [0/5] Kiem tra va khoi dong Database Postgres (postgres-osb)...
-docker start postgres-osb >nul 2>&1
-timeout /t 2 /nobreak >nul
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0start-database.ps1"
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [DUNG LAI] Vui long bat Docker Desktop truoc khi khoi dong cac dich vu!
+    echo.
+    pause
+    exit /b 1
+)
 
+echo.
 echo [1/5] Dang khoi dong Identity API (Port 3041)...
 start "Identity API :3041" /D "C:\Code\OSB\Logbook-identity-api" cmd /k "npm run start:dev"
 timeout /t 2 /nobreak >nul
