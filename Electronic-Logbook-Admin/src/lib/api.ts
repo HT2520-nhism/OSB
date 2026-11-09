@@ -88,6 +88,9 @@ export async function getFormSubmissions(filters?: {
           ...formStore.filter((f) => !mapped.some((m) => m.id === f.id)),
         ];
 
+        // Sort newest first
+        list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+
         if (filters?.formCode && filters.formCode !== 'ALL') {
           list = list.filter((f) => f.formCode === filters.formCode);
         }
@@ -111,6 +114,7 @@ export async function getFormSubmissions(filters?: {
   }
 
   let list = [...formStore];
+  list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
   if (filters?.formCode && filters.formCode !== 'ALL') {
     list = list.filter((f) => f.formCode === filters.formCode);
   }

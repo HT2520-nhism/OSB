@@ -1,18 +1,13 @@
-FROM node:20-alpine
-
-RUN apk add --no-cache ffmpeg
-
+FROM node:20-alpine AS builder
 WORKDIR /app
-
 COPY package*.json ./
-
 RUN npm install
-
 COPY . .
-
 RUN npm run build
-
-
-EXPOSE 3041
-
-CMD ["node","dist/src/main.js"]
+FROM node:20-alpine AS runner
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --only=production
+COPY --from=builder /app/dist ./dist
+EXPOSE 3000
+CMD ["node", "dist/main.js"]

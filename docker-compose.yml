@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  gateway-api:
+    build:
+      context: ./Gateway-api
+      dockerfile: Dockerfile
+    container_name: gateway-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - identity-api
+
+  identity-api:
+    build:
+      context: ./Identity-api
+      dockerfile: Dockerfile
+    container_name: identity-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+
+  electronic-logbook-api:
+    build:
+      context: ./Electronic-logbook-api
+      dockerfile: Dockerfile
+    container_name: electronic-logbook-api
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+
+  electronic-logbook-admin:
+    build:
+      context: ./Electronic-Logbook-Admin
+      dockerfile: Dockerfile
+    container_name: electronic-logbook-admin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+
+networks:
+  default:
+    name: osb-network

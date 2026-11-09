@@ -80,6 +80,15 @@ export async function enqueue(
   return row;
 }
 
+export async function listDrainableOutbox(): Promise<OutboxItem[]> {
+  await ensureSchema();
+  const rows = await db().getAllAsync<any>(
+    `SELECT * FROM outbox WHERE status = 'PENDING' OR (status = 'ERROR' AND attempts < ?) ORDER BY createdAt ASC`,
+    [MAX_ATTEMPTS]
+  );
+  return rows.map(rowToItem);
+}
+
 export async function listOutbox(filter?: { status?: OutboxStatus }): Promise<OutboxItem[]> {
   await ensureSchema();
   const where = filter?.status ? 'WHERE status = ?' : '';
@@ -196,7 +205,7 @@ export async function processOutbox(deviceId: string): Promise<{
     return { processed: 0, conflicts: 0, errors: 0 };
   }
 
-  const pending = await listOutbox({ status: 'PENDING' });
+  const pending = await listDrainableOutbox();
   let processed = 0;
   let conflicts = 0;
   let errors = 0;
@@ -230,11 +239,17 @@ export async function processOutbox(deviceId: string): Promise<{
           : null) ??
         ex?.message ??
         'Lỗi không xác định';
-      if (isNetworkError(err)) {
-        // Will be retried on next online tick
-        await resetForRetry(item.id);
-        continue;
+
+      const isTransientServerError = typeof status === 'number' && status >= 500 && status < 600;
+      if (isNetworkError(err) || isTransientServerError) {
+        // Transient error — bump attempts and keep ready for retry on next sync tick
+        await bumpAttempts(item.id);
+        if (item.attempts + 1 < MAX_ATTEMPTS) {
+          await resetForRetry(item.id);
+          continue;
+        }
       }
+
       await recordFailure(item.id, status ? String(status) : null, message);
       if (status === 409) conflicts++;
       else errors++;
